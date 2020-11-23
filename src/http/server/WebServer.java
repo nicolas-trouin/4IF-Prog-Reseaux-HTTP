@@ -2,29 +2,16 @@
 
 package http.server;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static java.lang.System.exit;
 
-/**
- * Example program from Chapter 1 Programming Spiders, Bots and Aggregators in
- * Java Copyright 2001 by Jeff Heaton
- * <p>
- * WebServer is a very simple web-server. Any request is responded with a very
- * simple web-page.
- *
- * @author Jeff Heaton
- * @version 1.0
- */
 public class WebServer {
 
-    /**
-     * WebServer constructor.
-     */
     protected void start(int port) {
         ServerSocket s;
 
@@ -41,35 +28,61 @@ public class WebServer {
         System.out.println("Waiting for connection");
         while (true) {
             try {
-                // wait for a connection
                 Socket remote = s.accept();
-                // remote is now the connected socket
-                System.out.println("Connection, sending data.");
-                BufferedReader in = new BufferedReader(new InputStreamReader(
-                        remote.getInputStream()));
+
+                System.out.println("Connection from " + remote.getInetAddress().getHostAddress());
+                BufferedReader in = new BufferedReader(new InputStreamReader(remote.getInputStream()));
                 PrintWriter out = new PrintWriter(remote.getOutputStream());
 
-                // read the data sent. We basically ignore it,
-                // stop reading once a blank line is hit. This
-                // blank line signals the end of the client HTTP
-                // headers.
-                String str = ".";
-                while (str != null && !str.equals(""))
-                    str = in.readLine();
 
-                // Send the response
-                // Send the headers
-                out.println("HTTP/1.0 200 OK");
-                out.println("Content-Type: text/html");
-                out.println("Server: Bot");
-                // this blank line signals the end of the headers
-                out.println("");
-                // Send the HTML page
-                out.println("<H1>Welcome to the Ultra Mini-WebServer</H1>");
+                String str = in.readLine();
+                System.out.println(str);
+
+                String[] request = str.split(" "); // GET /index.html HTTP/1.1
+                String method = request[0];
+                String resource = request[1];
+                String httpVersion = request[2];
+                while (str != null && !str.equals("")) { // Reading the headers. They are ignored.
+                    str = in.readLine();
+                }
+
+                if (resource.equals("/")) resource = "index.html";
+
+                if (resource.charAt(0) == '/') resource = resource.substring(1);
+
+                String filetype;
+                filetype = Files.probeContentType(Path.of(resource)); // text/html or image/jpg
+                // It seems like Files.probeContentType(path) does not recognize Javascript files correctly
+                if(filetype == null && resource.split("\\.")[1].equals("js")){
+                    filetype = "text/javascript";
+                }
+                try {
+                    File file = new File(resource);
+                    if (filetype.split("/")[0].equals("image")) { // If file is an image
+                        Files.copy(file.toPath(), remote.getOutputStream()); // Send the bytes directly
+                    } else { // Else, it's a text file
+                        FileReader fileReader = new FileReader(file); // If file is not found, FileNotFoundException is thrown and caught
+                        out.println(httpVersion + " 200 OK");
+                        out.println("Content-Type: " + filetype);
+                        out.println("Server: Pierre&Nico's Handmade Web Server");
+                        out.println("");
+
+                        BufferedReader bufferedReader = new BufferedReader(fileReader);
+                        String line;
+                        while ((line = bufferedReader.readLine()) != null) { // Reading the file line per line and sending each line to the client
+                            out.println(line);
+                        }
+                    }
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                    out.println(httpVersion + " 404 NOT FOUND");
+                    out.println("");
+                    //TODO implement more
+                }
                 out.flush();
                 remote.close();
             } catch (Exception e) {
-                System.out.println("Error: " + e);
+                e.printStackTrace();
             }
         }
     }
@@ -79,7 +92,7 @@ public class WebServer {
      *
      * @param args Command line parameters are not used.
      */
-    public static void main(String args[]) {
+    public static void main(String[] args) {
         if (args.length != 1) {
             System.out.println("Usage : WebServer <port>");
             exit(1);
