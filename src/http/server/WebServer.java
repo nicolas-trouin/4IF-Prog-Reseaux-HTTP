@@ -51,14 +51,15 @@ public class WebServer {
                 if (resource.charAt(0) == '/') resource = resource.substring(1);
 
                 String filetype;
-                filetype = Files.probeContentType(Path.of(resource)); // text/html or image/jpg
+                filetype = Files.probeContentType(Path.of(resource)); // text/html or image/jpg or mp3
                 // It seems like Files.probeContentType(path) does not recognize Javascript files correctly
                 if(filetype == null && resource.split("\\.")[1].equals("js")){
                     filetype = "text/javascript";
                 }
                 try {
                     File file = new File(resource);
-                    if (filetype.split("/")[0].equals("image")) { // If file is an image
+                    String filecategory = filetype.split("/")[0];
+                    if (filecategory.equals("image") || filecategory.equals("audio") || filecategory.equals("video")) { // If file is an image or a song
                         Files.copy(file.toPath(), remote.getOutputStream()); // Send the bytes directly
                     } else { // Else, it's a text file
                         FileReader fileReader = new FileReader(file); // If file is not found, FileNotFoundException is thrown and caught
