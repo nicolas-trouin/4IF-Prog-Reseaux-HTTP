@@ -7,6 +7,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static java.lang.System.exit;
 
@@ -46,7 +47,16 @@ public class WebServer {
                     str = in.readLine();
                 }
 
-                handleGETRequest(remote, out, resource, httpVersion);
+                switch (method) {
+                    case "GET" :
+                        handleGETRequest(remote, out, resource, httpVersion);
+                        break;
+                    case "PUT" :
+                        handlePUTRequest(remote, out, resource, httpVersion);
+                        break;
+                    default:
+                        System.out.println("default");
+                }
 
                 out.flush();
                 remote.close();
@@ -64,7 +74,7 @@ public class WebServer {
         String filetype;
         filetype = Files.probeContentType(Path.of(resource)); // text/html or image/jpg or mp3
         // It seems like Files.probeContentType(path) does not recognize Javascript files correctly
-        if(filetype == null && resource.split("\\.")[1].equals("js")){
+        if (filetype == null && resource.split("\\.")[1].equals("js")) {
             filetype = "text/javascript";
         }
         try {
@@ -90,6 +100,39 @@ public class WebServer {
             out.println(httpVersion + " 404 NOT FOUND");
             out.println("");
             //TODO implement more
+        }
+    }
+
+    private void handlePUTRequest(Socket remote, PrintWriter out, String resource, String httpVersion) throws IOException {
+        if (resource.equals("/")) resource = "index.html";
+        if (resource.charAt(0) == '/') resource = resource.substring(1);
+
+        String filetype;
+        filetype = Files.probeContentType(Path.of(resource)); // text/html or image/jpg or mp3
+        // It seems like Files.probeContentType(path) does not recognize Javascript files correctly
+        if (filetype == null && resource.split("\\.")[1].equals("js")) {
+            filetype = "text/javascript";
+        }
+
+        if (filetype.split("/")[0].equals("text")) {
+            // text
+            out.println(httpVersion + " 200 OK");
+            out.println("Content-Type: " + filetype);
+            out.println("Server: Pierre&Nico's Handmade Web Server");
+            out.println("");
+
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(remote.getInputStream()));
+
+            FileWriter fileWriter = new FileWriter(resource);
+            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+
+            String line;
+            while ((line = bufferedReader.readLine()) != null) { // Reading the file line per line and sending each line to the client
+                bufferedWriter.write(line);
+            }
+        } else {
+            // other cases : image, video, ...
+
         }
     }
 
