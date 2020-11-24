@@ -46,45 +46,50 @@ public class WebServer {
                     str = in.readLine();
                 }
 
-                if (resource.equals("/")) resource = "index.html";
+                handleGETRequest(remote, out, resource, httpVersion);
 
-                if (resource.charAt(0) == '/') resource = resource.substring(1);
-
-                String filetype;
-                filetype = Files.probeContentType(Path.of(resource)); // text/html or image/jpg or mp3
-                // It seems like Files.probeContentType(path) does not recognize Javascript files correctly
-                if(filetype == null && resource.split("\\.")[1].equals("js")){
-                    filetype = "text/javascript";
-                }
-                try {
-                    File file = new File(resource);
-                    String filecategory = filetype.split("/")[0];
-                    if (filecategory.equals("image") || filecategory.equals("audio") || filecategory.equals("video")) { // If file is an image or a song
-                        Files.copy(file.toPath(), remote.getOutputStream()); // Send the bytes directly
-                    } else { // Else, it's a text file
-                        FileReader fileReader = new FileReader(file); // If file is not found, FileNotFoundException is thrown and caught
-                        out.println(httpVersion + " 200 OK");
-                        out.println("Content-Type: " + filetype);
-                        out.println("Server: Pierre&Nico's Handmade Web Server");
-                        out.println("");
-
-                        BufferedReader bufferedReader = new BufferedReader(fileReader);
-                        String line;
-                        while ((line = bufferedReader.readLine()) != null) { // Reading the file line per line and sending each line to the client
-                            out.println(line);
-                        }
-                    }
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                    out.println(httpVersion + " 404 NOT FOUND");
-                    out.println("");
-                    //TODO implement more
-                }
                 out.flush();
                 remote.close();
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    private void handleGETRequest(Socket remote, PrintWriter out, String resource, String httpVersion) throws IOException {
+        if (resource.equals("/")) resource = "index.html";
+
+        if (resource.charAt(0) == '/') resource = resource.substring(1);
+
+        String filetype;
+        filetype = Files.probeContentType(Path.of(resource)); // text/html or image/jpg or mp3
+        // It seems like Files.probeContentType(path) does not recognize Javascript files correctly
+        if(filetype == null && resource.split("\\.")[1].equals("js")){
+            filetype = "text/javascript";
+        }
+        try {
+            File file = new File(resource);
+            String filecategory = filetype.split("/")[0];
+            if (filecategory.equals("image") || filecategory.equals("audio") || filecategory.equals("video")) { // If file is an image or a song
+                Files.copy(file.toPath(), remote.getOutputStream()); // Send the bytes directly
+            } else { // Else, it's a text file
+                FileReader fileReader = new FileReader(file); // If file is not found, FileNotFoundException is thrown and caught
+                out.println(httpVersion + " 200 OK");
+                out.println("Content-Type: " + filetype);
+                out.println("Server: Pierre&Nico's Handmade Web Server");
+                out.println("");
+
+                BufferedReader bufferedReader = new BufferedReader(fileReader);
+                String line;
+                while ((line = bufferedReader.readLine()) != null) { // Reading the file line per line and sending each line to the client
+                    out.println(line);
+                }
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            out.println(httpVersion + " 404 NOT FOUND");
+            out.println("");
+            //TODO implement more
         }
     }
 
