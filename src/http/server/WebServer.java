@@ -47,9 +47,12 @@ public class WebServer {
                     str = in.readLine();
                 }
 
-                switch (method) {
+                switch(method){
                     case "GET" :
                         handleGETRequest(remote, out, resource, httpVersion);
+                        break;
+                    case "DELETE" :
+                        handleDELETERequest(remote, out, resource, httpVersion);
                         break;
                     case "PUT" :
                         handlePUTRequest(remote, out, resource, httpVersion);
@@ -103,6 +106,28 @@ public class WebServer {
         }
     }
 
+
+    private void handleDELETERequest(Socket remote, PrintWriter out, String resource, String httpVersion){
+        if (resource.equals("/")) resource = "index.html";
+
+        if (resource.charAt(0) == '/') resource = resource.substring(1);
+
+        try {
+            if(Files.deleteIfExists(Path.of(resource))){
+                out.println(httpVersion + " 204 No Content");
+                out.println("Server: Pierre&Nico's Handmade Web Server");
+                out.println("");
+            } else {
+                out.println(httpVersion + " 404 Not Found");
+                out.println("Server: Pierre&Nico's Handmade Web Server");
+                out.println("");
+                out.println("<h1>File not found</h1>");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+  
     private void handlePUTRequest(Socket remote, PrintWriter out, String resource, String httpVersion) throws IOException {
         if (resource.equals("/")) resource = "index.html";
         if (resource.charAt(0) == '/') resource = resource.substring(1);
@@ -132,7 +157,6 @@ public class WebServer {
             }
         } else {
             // other cases : image, video, ...
-
         }
     }
 
