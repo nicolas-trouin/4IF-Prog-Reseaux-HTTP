@@ -63,7 +63,8 @@ public class WebServer {
                         handlePOSTRequest(remote, out, resource, httpVersion);
                         break;
                     default:
-                        System.out.println("default");
+                        handleDefault(out, httpVersion, method);
+                        break;
                 }
 
                 out.flush();
@@ -198,6 +199,13 @@ public class WebServer {
             out.println("");
             out.println("<h1>Internal Server Error</h1>");
         }
+    }
+
+    private void handleDefault(PrintWriter out, String httpVersion, String method) {
+        out.println(httpVersion + " 501 Not Implemented");
+        out.println("Server: Pierre&Nico's Handmade Web Server");
+        out.println("");
+        out.println("<h1>" + method + " is not supported</h1>");
     }
 
     /**
