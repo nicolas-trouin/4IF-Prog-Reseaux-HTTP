@@ -4,7 +4,14 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 
+/**
+ * Class to ping. Tests only.
+ */
 public class WebPing {
+    /**
+     * Main function.
+     * @param args Arguments.
+     */
     public static void main(String[] args) {
 
         if (args.length != 2) {
