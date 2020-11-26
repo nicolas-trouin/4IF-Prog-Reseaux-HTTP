@@ -50,8 +50,6 @@ public class WebServer {
                     str = in.readLine();
                 }
 
-                in.close();
-
                 switch (method) {
                     case "GET":
                         handleGETRequest(remote, out, resource, httpVersion);
