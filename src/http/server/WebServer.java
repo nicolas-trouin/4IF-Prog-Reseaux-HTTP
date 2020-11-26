@@ -80,18 +80,37 @@ public class WebServer {
 
         if (resource.charAt(0) == '/') resource = resource.substring(1);
 
+        String[] resourcePath = resource.split("/");
+        if(resourcePath[0].equals("src")){
+            out.println(httpVersion + " 403 Forbidden");
+            out.println("Server: Pierre&Nico's Handmade Web Server");
+            out.println("");
+            out.println("<h1>Access to this resource is forbidden</h1>");
+            return;
+        }
+
+        if(Files.isDirectory(Path.of(resource))){
+            out.println(httpVersion + " 412 Precondition Failed");
+            out.println("Server: Pierre&Nico's Handmade Web Server");
+            out.println("");
+            out.println("<h1> Acces denied : " + resource + " is a directory</h1>");
+            return;
+        }
+
+
         String filetype;
         filetype = Files.probeContentType(Path.of(resource)); // text/html or image/jpg or mp3
         // It seems like Files.probeContentType(path) does not recognize Javascript files correctly
-        if (filetype == null && resource.split("\\.")[1].equals("js")) {
+        String[] fileTypeSplit = resource.split("\\.");
+        if (filetype == null && fileTypeSplit.length >= 2 && fileTypeSplit[1].equals("js")) {
             filetype = "text/javascript";
+        } else if (filetype == null) {
+            filetype = "data/undefined";
         }
         try {
             File file = new File(resource);
             String filecategory = filetype.split("/")[0];
-            if (filecategory.equals("image") || filecategory.equals("audio") || filecategory.equals("video")) { // If file is an image or a song
-                Files.copy(file.toPath(), remote.getOutputStream()); // Send the bytes directly
-            } else { // Else, it's a text file
+            if (filecategory.equals("text")) { // It's a text file
                 FileReader fileReader = new FileReader(file); // If file is not found, FileNotFoundException is thrown and caught
                 out.println(httpVersion + " 200 OK");
                 out.println("Content-Type: " + filetype);
@@ -103,12 +122,15 @@ public class WebServer {
                 while ((line = bufferedReader.readLine()) != null) { // Reading the file line per line and sending each line to the client
                     out.println(line);
                 }
+            } else { // Else, it's an image or a song or a video or anything else
+                Files.copy(file.toPath(), remote.getOutputStream()); // Send the bytes directly
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             out.println(httpVersion + " 404 NOT FOUND");
+            out.println("Server: Pierre&Nico's Handmade Web Server");
             out.println("");
-            //TODO implement more
+            out.println("<h1>404 Not Found</h1>");
         }
     }
 
@@ -133,7 +155,7 @@ public class WebServer {
                         bufferedWriter.append(line).append(String.valueOf('\n'));
                         bufferedWriter.flush();
                     }
-                } catch(SocketTimeoutException e){
+                } catch (SocketTimeoutException e) {
                     e.printStackTrace();
                     out.println(httpVersion + " 204 No Content");
                     out.println("Server: Pierre&Nico's Handmade Web Server");
