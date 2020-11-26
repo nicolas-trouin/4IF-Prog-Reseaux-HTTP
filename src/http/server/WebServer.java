@@ -49,6 +49,8 @@ public class WebServer {
                     str = in.readLine();
                 }
 
+                in.close();
+
                 switch (method) {
                     case "GET":
                         handleGETRequest(remote, out, resource, httpVersion);
@@ -144,11 +146,12 @@ public class WebServer {
         }
 
         try {
-            //Files.copy(remote.getInputStream(), Path.of(resource), StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(remote.getInputStream(), Path.of(resource), StandardCopyOption.REPLACE_EXISTING);
 
             //FileOutputStream fileOutputStream = new FileOutputStream(resource);
             //remote.getInputStream().transferTo(fileOutputStream);
 
+            /*
             FileWriter fileWriter = new FileWriter(resource); // If file is not found, FileNotFoundException is thrown and caught
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(remote.getInputStream()));
             char[] line = new char[256];
@@ -158,6 +161,8 @@ public class WebServer {
                 System.out.println(line);
                 fileWriter.write(line);
             }
+            fileWriter.close();
+            */
 
             System.out.println(responseCode);
             out.println(httpVersion + " " + responseCode);
@@ -165,6 +170,7 @@ public class WebServer {
             out.println("");
             out.println("<h1>" + responseBody + "</h1>");
         } catch (IOException e) {
+            e.printStackTrace();
             out.println(httpVersion + " 500 Internal Server Error");
             out.println("Server: Pierre&Nico's Handmade Web Server");
             out.println("");
