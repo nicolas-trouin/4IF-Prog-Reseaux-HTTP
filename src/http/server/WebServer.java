@@ -82,7 +82,7 @@ public class WebServer {
         }
     }
 
-    private void handleGETRequest(Socket remote, PrintWriter out, String resource, String httpVersion) throws IOException {
+    private void handleGETRequest(Socket remote, PrintWriter out, String resource, String httpVersion){
         if (resource.equals("/")) resource = "index.html";
 
         if (resource.charAt(0) == '/') resource = resource.substring(1);
@@ -104,7 +104,7 @@ public class WebServer {
             return;
         }
 
-
+        try {
         String filetype;
         filetype = Files.probeContentType(Path.of(resource)); // text/html or image/jpg or mp3
         // It seems like Files.probeContentType(path) does not recognize Javascript files correctly
@@ -114,7 +114,6 @@ public class WebServer {
         } else if (filetype == null) {
             filetype = "data/undefined";
         }
-        try {
             File file = new File(resource);
             String filecategory = filetype.split("/")[0];
             FileReader fileReader = new FileReader(file); // If file is not found, FileNotFoundException is thrown and caught
@@ -138,6 +137,8 @@ public class WebServer {
             out.println("Server: Pierre&Nico's Handmade Web Server");
             out.println("");
             out.println("<h1>404 Not Found</h1>");
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
