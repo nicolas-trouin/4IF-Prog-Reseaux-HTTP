@@ -40,7 +40,7 @@ public class WebServer {
                 String str = in.readLine();
                 System.out.println(str);
                 System.out.flush();
-                
+
                 String[] request = str.split(" "); // GET /index.html HTTP/1.1
                 String method = request[0];
                 String resource = request[1];
@@ -58,6 +58,9 @@ public class WebServer {
                         break;
                     case "PUT":
                         handlePUTRequest(remote, out, resource, httpVersion);
+                        break;
+                    case "POST":
+                        handePOSTRequest(remote, out, resource, httpVersion);
                         break;
                     default:
                         System.out.println("default");
@@ -109,6 +112,25 @@ public class WebServer {
     }
 
 
+    private void handePOSTRequest(Socket remote, PrintWriter out, String resource, String httpVersion) {
+        if (resource.equals("/")) resource = "index.html";
+
+        if (resource.charAt(0) == '/') resource = resource.substring(1);
+
+        String filetype;
+        try {
+            filetype = Files.probeContentType(Path.of(resource)); // text/html
+            if (filetype.split("/")[0].equals("text")) {
+
+            } else {
+                //TODO Code d'erreur
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            //TODO Code d'erreur qui va bien
+        }
+    }
+
     private void handleDELETERequest(Socket remote, PrintWriter out, String resource, String httpVersion) {
         if (resource.equals("/")) resource = "index.html";
 
@@ -135,7 +157,7 @@ public class WebServer {
         if (resource.charAt(0) == '/') resource = resource.substring(1);
 
         String responseCode, responseBody;
-        if(Files.exists(Path.of(resource))){
+        if (Files.exists(Path.of(resource))) {
             responseCode = "200 OK";
             responseBody = "File replaced";
         } else {
