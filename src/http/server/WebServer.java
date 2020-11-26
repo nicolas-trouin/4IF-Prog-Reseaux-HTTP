@@ -54,7 +54,7 @@ public class WebServer {
                         handleGETRequest(remote, out, resource, httpVersion);
                         break;
                     case "DELETE":
-                        handleDELETERequest(remote, out, resource, httpVersion);
+                        handleDELETERequest(out, resource, httpVersion);
                         break;
                     case "PUT":
                         handlePUTRequest(remote, out, resource, httpVersion);
@@ -62,8 +62,15 @@ public class WebServer {
                     case "POST":
                         handlePOSTRequest(remote, out, resource, httpVersion);
                         break;
+                    case "HEAD":
+                    case "CONNECT":
+                    case "OPTIONS":
+                    case "TRACE":
+                    case "PATCH":
+                        handleNotImplemented(out, httpVersion, method);
+                        break;
                     default:
-                        handleDefault(out, httpVersion, method);
+                        handleBadRequest(out, httpVersion, method);
                         break;
                 }
 
@@ -134,7 +141,6 @@ public class WebServer {
         }
     }
 
-
     private void handlePOSTRequest(Socket remote, PrintWriter out, String resource, String httpVersion) {
         if (resource.equals("/")) resource = "index.html";
 
@@ -171,7 +177,7 @@ public class WebServer {
         }
     }
 
-    private void handleDELETERequest(Socket remote, PrintWriter out, String resource, String httpVersion) {
+    private void handleDELETERequest(PrintWriter out, String resource, String httpVersion) {
         if (resource.equals("/")) resource = "index.html";
 
         if (resource.charAt(0) == '/') resource = resource.substring(1);
@@ -223,11 +229,18 @@ public class WebServer {
         }
     }
 
-    private void handleDefault(PrintWriter out, String httpVersion, String method) {
+    private void handleNotImplemented(PrintWriter out, String httpVersion, String method) {
         out.println(httpVersion + " 501 Not Implemented");
         out.println("Server: Pierre&Nico's Handmade Web Server");
         out.println("");
         out.println("<h1>" + method + " is not supported</h1>");
+    }
+
+    private void handleBadRequest(PrintWriter out, String httpVersion, String method) {
+        out.println(httpVersion + " 400 Bad Request");
+        out.println("Server: Pierre&Nico's Handmade Web Server");
+        out.println("");
+        out.println("<h1>" + method + " is wrong</h1>");
     }
 
     /**
