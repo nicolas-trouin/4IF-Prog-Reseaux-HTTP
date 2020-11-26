@@ -5,6 +5,7 @@ package http.server;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -120,14 +121,31 @@ public class WebServer {
         String filetype;
         try {
             filetype = Files.probeContentType(Path.of(resource)); // text/html
+            System.out.println(filetype);
             if (filetype.split("/")[0].equals("text")) {
-
+                BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(resource, true));
+                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(remote.getInputStream()));
+                String line;
+                try {
+                    remote.setSoTimeout(5000);
+                    while ((line = bufferedReader.readLine()) != null) {
+                        System.out.println(line);
+                        bufferedWriter.append(line).append(String.valueOf('\n'));
+                        bufferedWriter.flush();
+                    }
+                } catch(SocketTimeoutException e){
+                    e.printStackTrace();
+                    out.println(httpVersion + " 204 No Content");
+                    out.println("Server: Pierre&Nico's Handmade Web Server");
+                    out.println("");
+                }
             } else {
-                //TODO Code d'erreur
+                System.out.println("not text");
+                //TODO Code d'erreur (412 ?)
             }
         } catch (IOException e) {
             e.printStackTrace();
-            //TODO Code d'erreur qui va bien
+            //TODO Code d'erreur qui va bien (5XX - 500 ?)
         }
     }
 
