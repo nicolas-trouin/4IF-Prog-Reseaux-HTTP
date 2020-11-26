@@ -8,7 +8,6 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
 import static java.lang.System.exit;
@@ -61,7 +60,7 @@ public class WebServer {
                         handlePUTRequest(remote, out, resource, httpVersion);
                         break;
                     case "POST":
-                        handePOSTRequest(remote, out, resource, httpVersion);
+                        handlePOSTRequest(remote, out, resource, httpVersion);
                         break;
                     default:
                         System.out.println("default");
@@ -113,7 +112,7 @@ public class WebServer {
     }
 
 
-    private void handePOSTRequest(Socket remote, PrintWriter out, String resource, String httpVersion) {
+    private void handlePOSTRequest(Socket remote, PrintWriter out, String resource, String httpVersion) {
         if (resource.equals("/")) resource = "index.html";
 
         if (resource.charAt(0) == '/') resource = resource.substring(1);
@@ -184,24 +183,9 @@ public class WebServer {
         }
 
         try {
+            remote.setSoTimeout(5000);
             Files.copy(remote.getInputStream(), Path.of(resource), StandardCopyOption.REPLACE_EXISTING);
-
-            //FileOutputStream fileOutputStream = new FileOutputStream(resource);
-            //remote.getInputStream().transferTo(fileOutputStream);
-
-            /*
-            FileWriter fileWriter = new FileWriter(resource); // If file is not found, FileNotFoundException is thrown and caught
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(remote.getInputStream()));
-            char[] line = new char[256];
-            int nbRead;
-            while ((nbRead = bufferedReader.read(line)) <= 0) { // Reading the file line per line and sending each line to the client
-                System.out.println(nbRead);
-                System.out.println(line);
-                fileWriter.write(line);
-            }
-            fileWriter.close();
-            */
-
+        } catch (SocketTimeoutException e) {
             System.out.println(responseCode);
             out.println(httpVersion + " " + responseCode);
             out.println("Server: Pierre&Nico's Handmade Web Server");
