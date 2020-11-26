@@ -63,6 +63,8 @@ public class WebServer {
                         handlePOSTRequest(remote, out, resource, httpVersion);
                         break;
                     case "HEAD":
+                        handleHEADRequest(remote, out, resource, httpVersion);
+                        break;
                     case "CONNECT":
                     case "OPTIONS":
                     case "TRACE":
@@ -138,6 +140,53 @@ public class WebServer {
             out.println("");
             out.println("<h1>404 Not Found</h1>");
         } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void handleHEADRequest(Socket remote, PrintWriter out, String resource, String httpVersion) {
+        if (resource.equals("/")) resource = "index.html";
+
+        if (resource.charAt(0) == '/') resource = resource.substring(1);
+
+        String[] resourcePath = resource.split("/");
+        if(resourcePath[0].equals("src")){
+            out.println(httpVersion + " 403 Forbidden");
+            out.println("Server: Pierre&Nico's Handmade Web Server");
+            out.println("");
+            return;
+        }
+
+        if(Files.isDirectory(Path.of(resource))){
+            out.println(httpVersion + " 412 Precondition Failed");
+            out.println("Server: Pierre&Nico's Handmade Web Server");
+            out.println("");
+            return;
+        }
+
+        try {
+            String filetype;
+            filetype = Files.probeContentType(Path.of(resource)); // text/html or image/jpg or mp3
+            // It seems like Files.probeContentType(path) does not recognize Javascript files correctly
+            String[] fileTypeSplit = resource.split("\\.");
+            if (filetype == null && fileTypeSplit.length >= 2 && fileTypeSplit[1].equals("js")) {
+                filetype = "text/javascript";
+            } else if (filetype == null) {
+                filetype = "data/undefined";
+            }
+            if(Files.exists(Path.of(resource))) {
+                out.println(httpVersion + " 200 OK");
+                out.println("Content-Type: " + filetype);
+                out.println("Server: Pierre&Nico's Handmade Web Server");
+                out.println("");
+                out.flush();
+            }
+            else {
+                out.println(httpVersion + " 404 NOT FOUND");
+                out.println("Server: Pierre&Nico's Handmade Web Server");
+                out.println("");
+            }
+        }catch (IOException e) {
             e.printStackTrace();
         }
     }
