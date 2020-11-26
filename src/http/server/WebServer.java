@@ -117,13 +117,13 @@ public class WebServer {
         try {
             File file = new File(resource);
             String filecategory = filetype.split("/")[0];
+            FileReader fileReader = new FileReader(file); // If file is not found, FileNotFoundException is thrown and caught
+            out.println(httpVersion + " 200 OK");
+            out.println("Content-Type: " + filetype);
+            out.println("Server: Pierre&Nico's Handmade Web Server");
+            out.println("");
+            out.flush();
             if (filecategory.equals("text")) { // It's a text file
-                FileReader fileReader = new FileReader(file); // If file is not found, FileNotFoundException is thrown and caught
-                out.println(httpVersion + " 200 OK");
-                out.println("Content-Type: " + filetype);
-                out.println("Server: Pierre&Nico's Handmade Web Server");
-                out.println("");
-
                 BufferedReader bufferedReader = new BufferedReader(fileReader);
                 String line;
                 while ((line = bufferedReader.readLine()) != null) { // Reading the file line per line and sending each line to the client
