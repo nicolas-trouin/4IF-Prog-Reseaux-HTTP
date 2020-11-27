@@ -141,15 +141,16 @@ public class WebServer {
             out.println("Server: Pierre&Nico's Handmade Web Server");
             out.println("");
             out.flush();
-            if (filecategory.equals("text")) { // It's a text file
-                BufferedReader bufferedReader = new BufferedReader(fileReader);
-                String line;
-                while ((line = bufferedReader.readLine()) != null) { // Reading the file line per line and sending each line to the client
-                    out.println(line);
-                }
-            } else { // Else, it's an image or a song or a video or anything else
-                Files.copy(file.toPath(), remote.getOutputStream()); // Send the bytes directly
-            }
+            Files.copy(file.toPath(), remote.getOutputStream()); // Send the bytes directly
+//            if (filecategory.equals("text")) { // It's a text file
+//                BufferedReader bufferedReader = new BufferedReader(fileReader);
+//                String line;
+//                while ((line = bufferedReader.readLine()) != null) { // Reading the file line per line and sending each line to the client
+//                    out.println(line);
+//                }
+//            } else { // Else, it's an image or a song or a video or anything else
+//                Files.copy(file.toPath(), remote.getOutputStream()); // Send the bytes directly
+//            }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             out.println(httpVersion + " 404 NOT FOUND");
@@ -245,6 +246,7 @@ public class WebServer {
                         bufferedWriter.append(line).append(String.valueOf('\n'));
                         bufferedWriter.flush();
                     }
+                    bufferedWriter.close();
                 } catch (SocketTimeoutException e) {
                     e.printStackTrace();
                     out.println(httpVersion + " 204 No Content");
